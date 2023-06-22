@@ -106,7 +106,8 @@
   (interactive)
   (find-file "~/.emacs.d/init-user.el"))
 
-(defun kg/toggle-maximize-buffer () "Maximize buffer"
+(defun kg/toggle-maximize-buffer ()
+  "Maximize buffer"
   (interactive)
   (if (= 1 (length (window-list)))
       (jump-to-register '_)

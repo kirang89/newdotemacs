@@ -123,6 +123,8 @@
 ;; Remove trailing whitespace before saving
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
+;; Follow compilation buffer output
+(setq compilation-scroll-output t)
 
 ;; On OS X, an Emacs instance started from the graphical user
 ;; interface will have a different environment than a shell in a
@@ -134,15 +136,15 @@
 ;; https://github.com/purcell/exec-path-from-shell
 (use-package exec-path-from-shell
   :config
-  (exec-path-from-shell-initialize))
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 
 
 ;; M-x with recently/frequently used commands
-(use-package smex
-  :config
-  (global-set-key (kbd "M-x") 'smex)
-  (global-set-key (kbd "s-x") 'smex))
-
+;; (use-package smex
+;;   :config
+;;   (global-set-key (kbd "M-x") 'smex)
+;;   (global-set-key (kbd "s-x") 'smex))
 
 ;; Install and setup company-mode for autocompletion
 (use-package company
@@ -172,7 +174,7 @@
 ;; Highlight matching parentheses
 (require 'paren)
 (show-paren-mode 1)
-(setq show-paren-delay 1)
+(setq show-paren-delay 0.125)
 (set-face-background 'show-paren-match (face-background 'default))
 (if (eq (frame-parameter nil 'background-mode) 'dark)
     (set-face-foreground 'show-paren-match "red")
@@ -186,11 +188,7 @@
 
 
 ;; Paredit makes it easier to navigate/edit s-expressions as blocks.
-(use-package paredit
-  :init
-  (add-hook 'clojure-mode-hook 'enable-paredit-mode)
-  (add-hook 'cider-repl-mode-hook 'enable-paredit-mode)
-  (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode))
+(use-package paredit)
 
 
 ;; To add some colors to those boring parens
@@ -204,6 +202,7 @@
 ;; Cider integrates a Clojure buffer with a REPL
 (use-package cider
   :init
+  ;; (add-to-list 'auto-mode-alist '("\\.clj\\'" . go-mode))
   (setq cider-repl-pop-to-buffer-on-connect t
         cider-show-error-buffer t
         cider-auto-select-error-buffer t
@@ -222,6 +221,7 @@
         cider-font-lock-dynamically '(macro core function var))
 
   :config
+  (add-hook 'clojure-mode-hook #'cider-mode)
   (add-hook 'cider-mode-hook #'eldoc-mode)
   (add-hook 'cider-repl-mode-hook #'paredit-mode)
   (add-hook 'cider-repl-mode-hook #'company-mode)
@@ -281,7 +281,10 @@
 (use-package magit
   :bind ("C-x g" . 'magit-status)
   :config
-  (setq magit-set-upstream-on-push 'askifnotset))
+  (setq magit-set-upstream-on-push 'askifnotset
+        magit-diff-highlight-indentation nil
+        magit-diff-paint-whitespace nil
+        magit-diff-highlight-trailing nil))
 
 ;; User customizations
 ;; Add your customizations to `init-user.el`
