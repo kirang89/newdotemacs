@@ -7,12 +7,16 @@
                     :weight 'normal
                     :width 'normal)
 
-(setq-default ;;line-spacing 4
-              help-window-select t
+(use-package font-lock+)
+
+(setq-default help-window-select t
               truncate-lines t
               fill-column 100)
 
 (setq-default line-spacing 3)
+
+;; Prevents from accidentally quitting Emacs
+;; (global-unset-key (kbd "C-x C-c"))
 
 ;; workaround for alt not working as meta key
 (setq mac-option-key-is-meta nil
@@ -34,7 +38,7 @@
 
 (set-default 'cursor-type '(bar . 3))
 ;; (set-default 'cursor-type 'box)
-(blink-cursor-mode 1)
+(blink-cursor-mode nil)
 
 (global-hl-line-mode -1)
 (set-face-attribute hl-line-face nil :underline t)
@@ -58,6 +62,9 @@
 
 (define-key clojure-mode-map (kbd "M-t") 'transpose-words-with-hyphens)
 
+;; (use-package spacious-padding
+;;   :hook (after-init . spacious-padding-mode))
+
 ;; =========================================================
 ;;                          THEMES
 ;; =========================================================
@@ -70,9 +77,10 @@
   :config
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
-  ;; (load-theme 'doom-challenger-deep t)
+  (load-theme 'doom-spacegrey t)
   ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+  ;; (doom-themes-org-config)
+  )
 
 (use-package solarized-theme
   :disabled t
@@ -88,7 +96,13 @@
   (set-face-attribute 'fringe nil
                       :foreground (face-foreground 'default)
                       :background (face-background 'default))
-  (load-theme 'jetbrains-darcula t))
+  ;; (load-theme 'jetbrains-darcula t)
+  )
+
+(use-package tokyo-theme
+  :straight (:host github :repo "rawleyfowler/tokyo-theme.el"))
+
+(use-package ef-themes)
 
 ;; Run hooks after loading a new theme
 (defvar after-load-theme-hook nil
@@ -118,12 +132,7 @@
   (setq ivy-count-format "%d/%d ")
 
   ;; Use [Enter] to navigate into the directory, not dired-open it.
-  (define-key ivy-minibuffer-map (kbd "C-m") 'ivy-alt-done)
-
-  ;; (use-package flx
-  ;;   :init
-  ;;   (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy))))
-  )
+  (define-key ivy-minibuffer-map (kbd "C-m") 'ivy-alt-done))
 
 (use-package rg
   :config
@@ -144,11 +153,13 @@
 (use-package counsel
   :after rg
   :config
-  ;; (global-set-key (kbd "s-g") 'counsel-rg)
-  (global-set-key (kbd "C-x C-r") 'counsel-recentf)
-  (setq counsel-rg-base-command "rg -i -w --no-heading --line-number %s .")
+  (global-set-key (kbd "s-r") 'counsel-recentf)
+  (setq counsel-rg-base-command "rg -i -M 120 --no-heading --line-number --color never %s .")
   (setq recentf-max-saved-items 50)
-  (setq recentf-auto-cleanup (* 24 60 60)))
+  (setq recentf-auto-cleanup (* 24 60 60))
+  (use-package flx
+    :init
+    (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))))
 
 (use-package ivy-rich
   :after ivy
@@ -177,13 +188,7 @@
         org-fontify-whole-heading-line t
         org-fontify-done-headline t
         org-fontify-quote-and-verse-blocks t
-        org-todo-keywords '((sequence "TODO" "DOING" "|" "DONE"))
-        org-capture-templates
-        '(
-          ("l" "Add a link to the linklog" entry
-           (file+olp+datetree (lambda () (concat org-directory "/linklog.org")))
-           "**** %?")
-          ))
+        org-todo-keywords '((sequence "TODO" "DOING" "|" "DONE")))
   (font-lock-add-keywords 'org-mode
                           '(("^ *\\([-]\\) "
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
@@ -194,7 +199,7 @@
               (custom-theme-set-faces
                  'user
                  '(variable-pitch ((t (:family "SF Pro" :height 180 :weight thin))))
-                 '(fixed-pitch ((t ( :family "Jetbrains Mono" :height 160))))
+                 '(fixed-pitch ((t ( :family "SF Mono" :height 150))))
                  '(org-block ((t (:inherit fixed-pitch))))
                  '(org-code ((t (:inherit (shadow fixed-pitch)))))))))
 
@@ -213,23 +218,32 @@
   (global-set-key (kbd "C->") 'mc/mark-next-like-this)
   (global-set-key (kbd "C-<") 'mc/mark-previous-like-this))
 
-(use-package all-the-icons)
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :config
+  (setq all-the-icons-scale-factor 1.1))
+
+(use-package all-the-icons-completion
+  :after (marginalia all-the-icons)
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
 
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode)
   :init
-  (set-face-attribute 'mode-line nil :family "MonoLisa" :height 140)
-  (set-face-attribute 'mode-line-inactive nil :family "MonoLisa" :height 140)
+  (set-face-attribute 'mode-line nil :family "MonoLisa" :height 160)
+  (set-face-attribute 'mode-line-inactive nil :family "MonoLisa" :height 160)
   :config
   (setq doom-modeline-buffer-file-name-style 'relative-from-project
-        ;; doom-modeline-icon (display-graphic-p)
+        doom-modeline-icon (display-graphic-p)
         doom-modeline-major-mode-color-icon t
         doom-modeline-major-mode-icon t
         doom-modeline-minor-modes nil
         doom-modeline-github nil
         doom-modeline-version nil
-        doom-modeline-height 6
-        doom-modeline-bar-width 1
+        doom-modeline-height 40
+        doom-modeline-bar-width 2
         doom-modeline-buffer-encoding nil
         doom-modeline-vcs-max-length 50
         doom-modeline-gnus nil
@@ -252,8 +266,8 @@
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "pandoc")
   :config
-  (add-hook 'gfm-mode-hook 'linum-mode)
-  (add-hook 'markdown-mode-hook 'linum-mode))
+  (add-hook 'gfm-mode-hook 'display-line-numbers-mode)
+  (add-hook 'markdown-mode-hook 'display-line-numbers-mode))
 
 (use-package markdown-preview-mode
   :after markdown-mode)
@@ -337,15 +351,19 @@
 ;;   (setq ivy-posframe-width 70)
 ;;   (ivy-posframe-mode -1))
 
-;; (use-package k8s-mode
-;;   :hook (k8s-mode . yas-minor-mode))
+(use-package protobuf-mode
+  :hook (protobuf-mode . flycheck-mode)
+  :config
+  (defconst my-protobuf-style
+    '((c-basic-offset . 2)
+      (indent-tabs-mode . nil)))
 
-;; (use-package protobuf-mode
-;;   :hook (protobuf-mode . flycheck-mode)
-;;   :config
-;;   ;; Consider integrating buf using the snippet below
-;;   ;; https://github.com/flycheck/flycheck/issues/1453#issuecomment-506598272
-;;   )
+  (add-hook 'protobuf-mode-hook
+            (lambda () (c-add-style "my-style" my-protobuf-style t)))
+
+  ;; Consider integrating buf using the snippet below
+  ;; https://github.com/flycheck/flycheck/issues/1453#issuecomment-506598272
+  )
 
 (use-package dockerfile-mode
   :config
@@ -365,7 +383,9 @@
 (use-package elixir-mode
   :hook ((elixir-mode . (lambda ()
                           (local-set-key (kbd "s-l l") 'goto-line)
-                          (local-set-key (kbd "C-c C-d") 'elixir-mode-open-docs-stable)))))
+                          (local-set-key (kbd "C-c C-d") 'elixir-mode-open-docs-stable))))
+  :custom
+  (lsp-elixir-server-command '("/Users/kiran/3rdPartyDev/lexical-v0.2.2/start_lexical.sh")))
 
 (use-package exunit
   :after elixir-mode
@@ -397,7 +417,7 @@
   :commands lsp
   :diminish lsp-mode
   :hook ((elixir-mode . lsp)
-         (ruby-mode . lsp)
+         ;; (ruby-mode . lsp)
          (lsp-mode . lsp-enable-which-key-integration))
   :bind (("C-c h" . 'lsp-describe-thing-at-point))
   :init
@@ -423,6 +443,83 @@
 
 (setq lsp-elixir-suggest-specs t
       lsp-ui-peek-enable t)
+
+;; ++++++++++++
+;; Experimental
+;; ++++++++++++
+
+;; Use existing frame when opening files
+(setq ns-pop-up-frames nil)
+
+;; No need to keep duplicates in prompt history.
+(setq history-delete-duplicates t)
+
+;; Allow auto revert mode to update vc information
+(setq auto-revert-check-vc-info t)
+
+;; Set ctags binary
+;; Run ctags -e -R . for indexing a project
+(setq ctags-path "/opt/homebrew/Cellar/universal-ctags/p6.0.20231105.0/bin/ctags")
+
+(use-package smart-comment
+  :bind ("M-;" . smart-comment))
+
+(use-package ruby-mode
+  :mode "\\.rb\\'"
+  :mode "Rakefile\\'"
+  :mode "Gemfile\\'"
+  :interpreter "ruby"
+  :hook ((ruby-mode . smartparens-strict-mode))
+  :init
+  (setq ruby-indent-level 2
+        ruby-indent-tabs-mode nil)
+  (add-hook 'ruby-mode 'superword-mode)
+  :config
+  ;; (use-package robe
+  ;;   :hook ((ruby-mode . robe-mode)
+  ;;          (ruby-ts-mode-hook . robe-mode))
+  ;;   :config
+  ;;   (eval-after-load 'company
+  ;;     '(push 'company-robe company-backends)))
+  )
+
+(use-package properties-mode
+  :straight (:host github :repo "iquiw/properties-mode")
+  :mode "\\.properties\\'")
+
+(use-package kotlin-mode)
+
+(use-package kanagawa-theme
+  :disabled true
+  :straight (:host github :repo "meritamen/emacs-kanagawa-theme"))
+
+;; Magit requires ‘transient’ >= 0.5.0,
+;; but due to bad defaults, Emacs’ package manager, refuses to
+;; upgrade this and other built-in packages to higher releases
+;; from GNU Elpa.
+
+;; The configuration below must be added to fix this:
+;; (setq package-install-upgrade-built-in nil)
+
+;;;; +++++++++++++++++++
+;;;; LSP Experimentation
+;;;; +++++++++++++++++++
+
+
+;; (use-package ruby-mode
+;;   :ensure nil
+;;   :after lsp-mode
+;;   :hook ((ruby-mode . lsp-deferred)
+;;          (ruby-mode . amk-lsp-format-on-save))
+;;   :custom
+;;   (ruby-insert-encoding-magic-comment nil "Not needed in Ruby 2")
+;;   :ensure-system-package (solargraph . "gem install --user-install solargraph"))
+
+;; (lsp-register-client
+;;  (make-lsp-client :new-connection (lsp-tramp-connection "solargraph")
+;;                   :major-modes '(ruby-mode)
+;;                   :remote? t
+;;                   :server-id 'solargraph))
 
 
 ;; (use-package go-mode
@@ -474,12 +571,7 @@
 
 ;; (add-hook 'project-find-functions #'project-find-go-module)
 
-;; ++++++++++++
-;; Experimental
-;; ++++++++++++
-
-(use-package tokyo-theme
-  :straight (:host github :repo "rawleyfowler/tokyo-theme.el"))
+;; --------- go-mode with LSP ------------
 
 ;; (use-package go-mode
 ;;   :hook ((go-mode . lsp-deferred)
@@ -516,29 +608,6 @@
 ;;   (add-hook 'go-mode-hook 'flycheck-mode)
 ;;   (local-set-key (kbd "C-c C-c") 'compile))
 
-;; (use-package go-mode
-;;   :after exec-path-from-shell
-
-;;   :init
-;;   (add-to-list 'auto-mode-alist '("\\.go\\'" . go-mode))
-;;   (use-package go-eldoc)
-;;   (use-package go-rename)
-;;   (use-package company-go
-;;     :commands company-go
-;;     :init (use-package company)
-;;     :config
-;;     (setq company-backends '(company-go)))
-
-;;   :config
-;;   (exec-path-from-shell-copy-env "GOROOT")
-;;   (exec-path-from-shell-copy-env "GOPATH")
-;;   (add-hook 'go-mode-hook 'flycheck-mode)
-;;   (add-hook 'go-mode-hook 'go-mode-setup)
-;;   (add-hook 'go-mode-hook
-;;             (lambda ()
-;;               (set (make-local-variable 'company-backends) '(company-go))
-;;               (company-mode))))
-
 ;; (use-package eldoc-overlay
 ;;   :init (eldoc-overlay-mode -1))
 
@@ -555,17 +624,14 @@
 ;;   (setq git-gutter:deleted-sign "-")
 ;;   (setq git-gutter:modified-sign "  "))
 
+;;;; +++++++++++++++++++
+;;;; MISC
+;;;; +++++++++++++++++++
+
 (use-package prescient
   :config
   (use-package ivy-prescient :config (ivy-prescient-mode))
   (use-package company-prescient :config (company-prescient-mode)))
-
-
-;; (lsp-register-client
-;;     (make-lsp-client :new-connection (lsp-tramp-connection "solargraph")
-;;                      :major-modes '(ruby-mode)
-;;                      :remote? t
-;;                      :server-id 'solargraph))
 
 (setq load-path (cons "/Users/kiran/.asdf/installs/erlang/26.0.1/lib/tools-3.6/emacs/" load-path))
 (require 'erlang-start)
@@ -581,7 +647,7 @@
   (setq ffip-use-rust-fd t)
   (global-set-key (kbd "s-t") 'find-file-in-project))
 
-(use-package jenkinsfile-mode)
+;; (use-package jenkinsfile-mode)
 
 (use-package org-present
   :config

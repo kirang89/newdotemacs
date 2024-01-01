@@ -121,4 +121,23 @@
     (isearch-forward-symbol-at-point)
     (isearch-query-replace-regexp))
 
+(defun kg/create-tags (dir-name)
+    "Create tags file."
+    (interactive "Directory: ")
+    (shell-command
+     (format "%s -f TAGS -e -R %s" ctags-path (directory-file-name dir-name))))
+
+;; taken from https://github.com/howardabrams/dot-files/blob/master/emacs.org#unfill-paragraph
+(defun kg/unfill-paragraph ()
+  "Convert a multi-line paragraph into a single line of text."
+  (interactive)
+  (let ((fill-column (point-max)))
+    (fill-paragraph nil)))
+
+(defun kg/magit-status-fullscreen (prefix)
+  (interactive)
+  (magit-status)
+  (unless prefix
+    (delete-other-windows)))
+
 (provide 'init-efuns)

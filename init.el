@@ -142,9 +142,34 @@
 
 ;; M-x with recently/frequently used commands
 ;; (use-package smex
+;;   :init (smex-initialize)
 ;;   :config
 ;;   (global-set-key (kbd "M-x") 'smex)
 ;;   (global-set-key (kbd "s-x") 'smex))
+
+;; (use-package ivy-smex
+;;   :config
+;;   (global-set-key (kbd "M-x") 'ivy-smex)
+;;   (global-set-key (kbd "s-x") 'ivy-smex))
+
+(use-package vertico
+  :custom
+  (vertico-cycle nil)
+  (read-file-name-completion-ignore-case t)
+  (read-buffer-completion-ignore-case t)
+  (completion-ignore-case t)
+
+  :config
+  (vertico-mode))
+
+(use-package marginalia
+  :init
+  (marginalia-mode))
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
 
 ;; Install and setup company-mode for autocompletion
 (use-package company
@@ -188,7 +213,13 @@
 
 
 ;; Paredit makes it easier to navigate/edit s-expressions as blocks.
-(use-package paredit)
+(use-package paredit
+  :config
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (paredit-mode)
+              (local-set-key (kbd "<C-s-right>") #'paredit-forward-slurp-sexp)
+              (local-set-key (kbd "<C-s-left>") #'paredit-forward-barf-sexp))))
 
 
 ;; To add some colors to those boring parens
@@ -282,6 +313,8 @@
   :bind ("C-x g" . 'magit-status)
   :config
   (setq magit-set-upstream-on-push 'askifnotset
+        magit-push-always-verify nil
+        magit-revert-buffers 'silent
         magit-diff-highlight-indentation nil
         magit-diff-paint-whitespace nil
         magit-diff-highlight-trailing nil))
