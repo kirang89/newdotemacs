@@ -1,9 +1,13 @@
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
 
+(defconst font "Basier Square Mono")
+(defconst org-code-block-font "JetBrains Mono")
+(defconst org-variable-pitch-font "SF Pro")
+
 (set-face-attribute 'default nil
-                    :family "MonoLisa"
-                    :height 150
+                    :family "Codelia"
+                    :height 170
                     :weight 'normal
                     :width 'normal)
 
@@ -13,7 +17,7 @@
               truncate-lines t
               fill-column 100)
 
-(setq-default line-spacing 3)
+(setq-default line-spacing 1)
 
 ;; Prevents from accidentally quitting Emacs
 ;; (global-unset-key (kbd "C-x C-c"))
@@ -36,8 +40,8 @@
       buffer-file-coding-system 'utf-8
       org-ellipsis " ▶")
 
-(set-default 'cursor-type '(bar . 3))
-;; (set-default 'cursor-type 'box)
+;;(set-default 'cursor-type '(bar . 3))
+(set-default 'cursor-type 'box)
 (blink-cursor-mode nil)
 
 (global-hl-line-mode -1)
@@ -62,8 +66,18 @@
 
 (define-key clojure-mode-map (kbd "M-t") 'transpose-words-with-hyphens)
 
-;; (use-package spacious-padding
-;;   :hook (after-init . spacious-padding-mode))
+(use-package spacious-padding
+  :hook (after-init . spacious-padding-mode)
+  :config
+  ;; (setq spacious-padding-widths
+  ;;     '( :internal-border-width 15
+  ;;        ;; :header-line-width 4
+  ;;        ;; :mode-line-width 6
+  ;;        ;; :tab-width 4
+  ;;        ;; :right-divider-width 30
+  ;;        ;; :scroll-bar-width 8
+  ;;        :fringe-width 8))
+  )
 
 ;; =========================================================
 ;;                          THEMES
@@ -103,6 +117,8 @@
   :straight (:host github :repo "rawleyfowler/tokyo-theme.el"))
 
 (use-package ef-themes)
+
+(use-package github-modern-theme)
 
 ;; Run hooks after loading a new theme
 (defvar after-load-theme-hook nil
@@ -198,8 +214,8 @@
               (org-indent-mode t)
               (custom-theme-set-faces
                  'user
-                 '(variable-pitch ((t (:family "SF Pro" :height 180 :weight thin))))
-                 '(fixed-pitch ((t ( :family "SF Mono" :height 150))))
+                 '(variable-pitch ((t (:family org-variable-pitch-font :height 180 :weight thin))))
+                 '(fixed-pitch ((t ( :family org-code-block-font :height 150))))
                  '(org-block ((t (:inherit fixed-pitch))))
                  '(org-code ((t (:inherit (shadow fixed-pitch)))))))))
 
@@ -232,8 +248,8 @@
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode)
   :init
-  (set-face-attribute 'mode-line nil :family "MonoLisa" :height 160)
-  (set-face-attribute 'mode-line-inactive nil :family "MonoLisa" :height 160)
+  (set-face-attribute 'mode-line nil :family font :height 140)
+  (set-face-attribute 'mode-line-inactive nil :family font :height 140)
   :config
   (setq doom-modeline-buffer-file-name-style 'relative-from-project
         doom-modeline-icon (display-graphic-p)
@@ -448,6 +464,12 @@
 ;; Experimental
 ;; ++++++++++++
 
+(setq ns-use-proxy-icon nil)
+(setq frame-title-format nil)
+
+;; Omit magit from native compilation
+(setq native-comp-deferred-compilation-deny-list '("magit"))
+
 ;; Use existing frame when opening files
 (setq ns-pop-up-frames nil)
 
@@ -459,7 +481,7 @@
 
 ;; Set ctags binary
 ;; Run ctags -e -R . for indexing a project
-(setq ctags-path "/opt/homebrew/Cellar/universal-ctags/p6.0.20231105.0/bin/ctags")
+(setq ctags-path "/opt/homebrew/bin/ctags")
 
 (use-package smart-comment
   :bind ("M-;" . smart-comment))
@@ -493,6 +515,11 @@
   :disabled true
   :straight (:host github :repo "meritamen/emacs-kanagawa-theme"))
 
+(use-package hungry-delete
+  :config
+  (setq hungry-delete-join-reluctantly t)
+  (global-hungry-delete-mode))
+
 ;; Magit requires ‘transient’ >= 0.5.0,
 ;; but due to bad defaults, Emacs’ package manager, refuses to
 ;; upgrade this and other built-in packages to higher releases
@@ -504,23 +531,6 @@
 ;;;; +++++++++++++++++++
 ;;;; LSP Experimentation
 ;;;; +++++++++++++++++++
-
-
-;; (use-package ruby-mode
-;;   :ensure nil
-;;   :after lsp-mode
-;;   :hook ((ruby-mode . lsp-deferred)
-;;          (ruby-mode . amk-lsp-format-on-save))
-;;   :custom
-;;   (ruby-insert-encoding-magic-comment nil "Not needed in Ruby 2")
-;;   :ensure-system-package (solargraph . "gem install --user-install solargraph"))
-
-;; (lsp-register-client
-;;  (make-lsp-client :new-connection (lsp-tramp-connection "solargraph")
-;;                   :major-modes '(ruby-mode)
-;;                   :remote? t
-;;                   :server-id 'solargraph))
-
 
 ;; (use-package go-mode
 ;;   :after exec-path-from-shell
@@ -534,67 +544,75 @@
 ;;   (add-hook 'go-mode-hook 'flycheck-mode)
 ;;   (add-hook 'before-save-hook 'gofmt-before-save))
 
+;; (use-package yasnippet)
+
 ;; (use-package company-go
 ;;   :commands company-go
 ;;   :config
-;;   (setq company-backends '(company-go)))
+;;   (add-hook 'go-mode-hook
+;;             (lambda ()
+;;               (setq company-backends '(company-go))
+;;               (company-mode-on))))
 
 ;; (use-package go-eldoc)
-;; (use-package gotest)
+(use-package gotest)
 
-;; (defun kg/go-mode-hook ()
-;;   (if (executable-find "goimports")
-;;       (setq gofmt-command "goimports"))
+(defun kg/go-mode-hook ()
+  (if (executable-find "goimports")
+      (setq gofmt-command "goimports"))
 
-;;   (go-eldoc-setup)
-;;   (subword-mode 1)
-;;   (smartparens-mode 1))
+  ;; (go-eldoc-setup)
+  (subword-mode 1)
+  (smartparens-mode 1)
+  (add-hook 'go-mode-hook (local-set-key (kbd "C-c C-c") 'go-run))
+  (add-hook 'go-mode-hook (local-set-key (kbd "C-c C-t") 'go-test-current-project)))
 
-;; (add-hook 'go-mode-hook 'kg/go-mode-hook)
-
-;; (use-package eglot)
-;; (add-hook 'go-mode-hook 'eglot-ensure)
-
-;; (setq-default eglot-workspace-configuration
-;;     '((:gopls .
-;;         ((staticcheck . t)
-;;          (matcher . "CaseSensitive")))))
-
-;; (require 'project)
-
-;; (defun project-find-go-module (dir)
-;;   (when-let ((root (locate-dominating-file dir "go.mod")))
-;;     (cons 'go-module root)))
-
-;; (cl-defmethod project-root ((project (head go-module)))
-;;   (cdr project))
-
-;; (add-hook 'project-find-functions #'project-find-go-module)
+(add-hook 'go-mode-hook 'kg/go-mode-hook)
 
 ;; --------- go-mode with LSP ------------
 
-;; (use-package go-mode
-;;   :hook ((go-mode . lsp-deferred)
-;;          (before-save . lsp-format-buffer)
-;;          (before-save . lsp-organize-imports)))
-;; (use-package lsp-mode
-;;   :init
-;;   (setq lsp-keymap-prefix "C-c l")
-;;   :hook ((go-mode . lsp-deferred)
-;;          (lsp-mode . lsp-enable-which-key-integration))
-;;   :commands (lsp lsp-deferred))
-;; (use-package lsp-ui
-;;   :hook (lsp-mode . lsp-ui-mode)
-;;   :custom
-;;   (lsp-ui-doc-position 'bottom))
-;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-;; (use-package company-lsp
-;;   :commands company-lsp)
-;; (setq lsp-ui-doc-enable t
-;;       lsp-ui-peek-enable t
-;;       lsp-ui-sideline-enable t
-;;       lsp-ui-imenu-enable t
-;;       lsp-ui-flycheck-enable t)
+(use-package lsp-mode
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook ((lsp-mode . lsp-enable-which-key-integration))
+  :commands (lsp lsp-deferred)
+  :config
+  (setq lsp-go-analyses '((unusedparams . t)
+                          (unusedvariable . t))))
+
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-position 'bottom)
+  :config
+  (setq lsp-ui-doc-enable t
+        lsp-ui-peek-enable t
+        lsp-ui-sideline-enable t
+        ;; lsp-ui-imenu-enable t
+        lsp-ui-flycheck-enable t
+        lsp-ui-sideline-show-code-actions nil
+        lsp-ui-doc-delay 1
+        lsp-enable-snippet nil)
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+
+(use-package company-lsp :commands company-lsp)
+
+(use-package go-mode
+  :hook ((go-mode . lsp-deferred)
+         (before-save . lsp-format-buffer)
+         (before-save . lsp-organize-imports))
+  :after exec-path-from-shell
+
+  :init
+  (add-to-list 'auto-mode-alist '("\\.go\\'" . go-mode))
+
+  :config
+  (exec-path-from-shell-copy-env "GOROOT")
+  (exec-path-from-shell-copy-env "GOPATH"))
+
 
 ;; (defun go-mode-setup ()
 ;;   (go-eldoc-setup)
@@ -701,3 +719,41 @@
 
 ;; =============== ADD THEME FOLDER =========================
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+
+
+
+
+;; (use-package go-mode
+;;   :after exec-path-from-shell
+
+;;   :init
+;;   (add-to-list 'auto-mode-alist '("\\.go\\'" . go-mode))
+
+;;   :config
+;;   (exec-path-from-shell-copy-env "GOROOT")
+;;   (exec-path-from-shell-copy-env "GOPATH")
+;;   (add-hook 'go-mode-hook 'flycheck-mode)
+;;   (add-hook 'before-save-hook 'gofmt-before-save))
+
+;; (use-package company-go
+;;   :commands company-go
+;;   :config
+;;   (add-hook 'go-mode-hook
+;;             (lambda ()
+;;               (setq company-backends '(company-go))
+;;               (company-mode-on))))
+
+;; (use-package go-eldoc)
+;; (use-package gotest)
+
+;; (defun kg/go-mode-hook ()
+;;   (if (executable-find "goimports")
+;;       (setq gofmt-command "goimports"))
+
+;;   (go-eldoc-setup)
+;;   (subword-mode 1)
+;;   (smartparens-mode 1)
+;;   (add-hook 'go-mode-hook (local-set-key (kbd "C-c C-c") 'go-run))
+;;   (add-hook 'go-mode-hook (local-set-key (kbd "C-c C-t") 'go-test-current-project)))
+
+;; (add-hook 'go-mode-hook 'kg/go-mode-hook)
